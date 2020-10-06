@@ -24,6 +24,53 @@ servers:
     description: OSB Checker - MockOSB
 
 paths:
+  /bluemix_v1/service_instances/{instance_id}:
+    put:
+      summary: enable/disable service instance
+      tags:
+        - ServiceInstances
+      operationId: serviceInstance.enable-disable
+      parameters:
+        - $ref: '#/components/parameters/APIVersion'
+        - $ref: '#/components/parameters/OriginatingIdentity'
+        - name: instance_id
+          in: path
+          description: instance id of instance to provision
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: parameters for the requested service instance provision
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceInstanceEnableDisable'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceInstanceEnableDisable'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Object'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /v2/catalog:
     get:
       summary: get the catalog of services that the service broker offers
@@ -387,7 +434,6 @@ components:
       required: true
       schema:
         type: string
-      default: '2.13'
 
     OriginatingIdentity:
       name: X-Broker-API-Originating-Identity
@@ -509,26 +555,48 @@ components:
     JSONSchemaObject:
       type: object
 
+    ServiceInstanceEnableDisable:
+      type: object
+      required:
+        - enabled
+      properties:
+        enabled:
+          type: boolean
+        initiator_id:
+          type: string
+        reason_code:
+          type: string
+
     ServiceInstanceProvisionRequest:
       type: object
       required:
         - service_id
         - plan_id
-        - organization_guid
-        - space_guid
       properties:
         service_id:
           type: string
         plan_id:
+          type: string
+        plan_name:
           type: string
         context:
           $ref: '#/components/schemas/Context'
         organization_guid:
           type: string
           deprecated: true
+          nullable: true
         space_guid:
           type: string
           deprecated: true
+          nullable: true
+        organization_id:
+          type: string
+          deprecated: true
+          nullable: true
+        space_id:
+          type: string
+          deprecated: true
+          nullable: true
         parameters:
           $ref: '#/components/schemas/Object'
 
@@ -677,6 +745,19 @@ components:
     Context:
       description: "See [Context Conventions](https://github.com/openservicebrokerapi/servicebroker/blob/master/profile.md#context-object) for more details."
       type: object
+      properties:
+        account_id:
+          type: string
+        crn:
+          type: string
+        name:
+          type: string
+        resource_group_crn:
+          type: string
+        target_crn:
+          type: string
+        platform:
+          type: string
 
     Metadata:
       description: "See [Service Metadata Conventions](https://github.com/openservicebrokerapi/servicebroker/blob/master/profile.md#service-metadata) for more details."
